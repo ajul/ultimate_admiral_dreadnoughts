@@ -30,15 +30,16 @@ def parse_csv(path):
                 elif header in list_headers:
                     row_data[header] = parse_list(cell)
                 else:
-                    row_data[header] = try_float(cell)
+                    row_data[header] = try_cast_number(cell)
             data[row_data[headers[0]]] = row_data
     return data
 
-def try_float(x):
-    try:
-        return float(x)
-    except:
-        return x
+def try_cast_number(x):
+    try: return int(x)
+    except: pass
+    try: return float(x)
+    except: pass
+    return x
 
 effect_headers = ['Comp_Needs', 'effect', 'param', 'stats']
 list_effects = ['need', 'needs_component', 'not_component', 'obsolete', 'unlock', 'var']
@@ -78,7 +79,7 @@ def parse_effect(header, cell):
             if len(args) > 1:
                 raise RuntimeError('Got unexpected multiple arguments for unary effect ' + effect_text)
             key = header + '.' + effect
-            result[key] = try_float(args[0])
+            result[key] = try_cast_number(args[0])
     return result
 
 list_headers = ['countries', 'effect', 'param', 'similar', 'shipType']
