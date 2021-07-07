@@ -18,7 +18,7 @@ def parse_csv(path):
             if row[0][0] == '@':
                 headers = []
                 for cell in row:
-                    if cell[0] in ['#', '@']:
+                    if len(cell) >= 1 and cell[0] in ['#', '@']:
                         cell = cell[1:]
                     headers.append(cell)
                 continue
@@ -26,7 +26,7 @@ def parse_csv(path):
             row_data = {}
             for header, cell in zip(headers, row):
                 if header in effect_headers:
-                    row_data.update(parse_effect(cell))
+                    row_data.update(parse_effect(header, cell))
                 elif header in list_headers:
                     row_data[header] = parse_list(cell)
                 else:
@@ -40,44 +40,48 @@ def try_float(x):
     except:
         return x
 
-effect_headers = ['Comp_Needs', 'effect']
-list_effects = ['need', 'needs_component', 'not_component', 'obsolete', 'unlock']
-dict_effects = ['cost', 'gun', 'stat', 'tonnage', 'turret_b_accuracy', 'turret_b_reload', 'turret_b_rotation', 'var', 'weight']
+effect_headers = ['Comp_Needs', 'effect', 'param', 'stats']
+list_effects = ['need', 'needs_component', 'not_component', 'obsolete', 'unlock', 'var']
+dict_effects = ['cost', 'gun', 'stat', 'tonnage', 'turret_b_accuracy', 'turret_b_reload', 'turret_b_rotation', 'weight']
 reverse_dict_effects = ['main_barrels', 'sec_barrels', 'torpedo_tubes']
     
-def parse_effect(cell):
+def parse_effect(header, cell):
+    cell = cell.replace(' ', '')
     result = {}
+    # Any effects with no arguments are listed in the header itself.
+    result[header] = []
+    
     for effect_text in re.split(r'\s*,\s*', cell):
         m = re.match(r'([a-z_]+)\((.*)\)', effect_text)
         if not m:
-            result[effect_text] = True
+            result[header].append(effect_text)
             continue
         effect = m.group(1)
         args = re.split(r'\s*;\s*', m.group(2))
         if effect in dict_effects:
             if len(args) != 2:
                 raise RuntimeError('Got unexpected number of arguments for dict effect', effect_text)
-            if effect not in result:
-                result[effect] = {}
-            key = effect + '.' + args[0]
+            key = header + '.' + effect + '.' + args[0]
             result[key] = float(args[1])
         elif effect in reverse_dict_effects:
-            if effect not in result:
-                result[effect] = {}
             value = float(args[0])
             for arg in args[1:]:
-                key = effect + '.' + arg
+                key = header + '.' + effect + '.' + arg
                 result[key] = value
         elif effect in list_effects:
-            result[effect] = args
+            key = header + '.' + effect
+            if key not in result:
+                result[key] = args
+            else:
+                result[key] += args
         else:
             if len(args) > 1:
                 raise RuntimeError('Got unexpected multiple arguments for unary effect ' + effect_text)
-            result[effect] = try_float(args[0])
+            key = header + '.' + effect
+            result[key] = try_float(args[0])
     return result
-        
 
-list_headers = ['effect', 'param', 'similar', 'shipType']
+list_headers = ['countries', 'effect', 'param', 'similar', 'shipType']
 
 def parse_list(cell):
     return re.split(r'\s*,\s', cell)
