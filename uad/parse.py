@@ -29,6 +29,8 @@ def parse_csv(path):
                     row_data.update(parse_effect(header, cell))
                 elif header in list_headers:
                     row_data[header] = parse_list(cell)
+                elif header[:-1] == 'range_':
+                    row_data[header] = float(cell.replace(',', '.'))
                 else:
                     row_data[header] = try_cast_number(cell)
             data[row_data[headers[0]]] = row_data

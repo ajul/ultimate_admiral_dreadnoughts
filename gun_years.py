@@ -1,16 +1,7 @@
-import uad.techs
 import uad.output
+import uad.years
 
-gun_techs = []
-
-for tech in uad.techs.techs.values():
-    if tech['type'] in ['gun_sec', 'gun_main']:
-        gun_techs.append(tech)
-
-start_year = min(tech['year'] for tech in gun_techs)
-end_year = max(tech['year'] for tech in gun_techs)
-
-
+techs = uad.parse.parse_data('technologies')
 
 header = [
     'Year',
@@ -22,9 +13,9 @@ result = []
 
 gun_marks = [''] * 21
 
-for year in range(start_year, end_year+1):
+for year in range(uad.years.start_year, uad.years.end_year+1):
     row = ['%d' % year]
-    for tech in gun_techs:
+    for tech in techs.values():
         if tech['year'] == year:
             for inch in range(2, 21):
                 key = 'effect.gun.%d' % inch

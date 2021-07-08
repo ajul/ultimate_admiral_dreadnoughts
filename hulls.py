@@ -1,5 +1,5 @@
 import uad.parse
-import uad.techs
+import uad.years
 import uad.output
 
 parts = uad.parse.parse_data('parts')
@@ -38,10 +38,10 @@ result_parts = []
 for part in parts.values():
     if part['type'] != 'hull': continue
     if part.get('enabled', 1) == 0.0: continue
-    if part['name'] not in uad.techs.unlock_years:
+    if part['name'] not in uad.years.hull_introduce:
         print('Skip non-unlockable', part['name'])
         continue
-    part['unlockYear'] = uad.techs.unlock_years[part['name']]
+    part['unlockYear'] = uad.years.hull_introduce[part['name']]
     result_parts.append(part)
 
 uad.output.output_all('hulls', header, result_parts, result_row)
