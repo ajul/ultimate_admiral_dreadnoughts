@@ -28,6 +28,7 @@ def parse_csv(path):
                 if header in effect_headers:
                     row_data.update(parse_effect(header, cell))
                 elif header in list_headers:
+                    if cell == '': continue
                     row_data[header] = parse_list(cell)
                 elif header[:-1] == 'range_':
                     row_data[header] = float(cell.replace(',', '.'))
@@ -44,7 +45,8 @@ def try_cast_number(x):
     return x
 
 effect_headers = ['Comp_Needs', 'effect', 'param', 'stats']
-list_effects = ['need', 'needs_component', 'not_component', 'obsolete', 'unlock', 'var']
+list_effects = ['needs_component', 'not_component', 'obsolete', 'unlock', 'var']
+multi_list_effects = ['need']
 dict_effects = ['cost', 'gun', 'stat', 'tonnage', 'turret_b_accuracy', 'turret_b_reload', 'turret_b_rotation', 'weight']
 reverse_dict_effects = ['main_barrels', 'sec_barrels', 'torpedo_tubes']
     
@@ -55,7 +57,7 @@ def parse_effect(header, cell):
     result[header] = []
     
     for effect_text in re.split(r'\s*,\s*', cell):
-        m = re.match(r'([a-z_]+)\((.*)\)', effect_text)
+        m = re.match(r'([a-z_]+)\(([^\)]*)', effect_text)
         if not m:
             result[header].append(effect_text)
             continue
@@ -77,6 +79,12 @@ def parse_effect(header, cell):
                 result[key] = args
             else:
                 result[key] += args
+        elif effect in multi_list_effects:
+            key = header + '.' + effect
+            if key not in result:
+                result[key] = [args]
+            else:
+                result[key] += [args]
         else:
             if len(args) > 1:
                 raise RuntimeError('Got unexpected multiple arguments for unary effect ' + effect_text)
